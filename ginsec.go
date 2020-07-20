@@ -48,9 +48,6 @@ type GinJWTMiddleware struct {
 	// Optional, by default no additional data will be set.
 	PayloadFunc func(data interface{}) MapClaims
 
-	// UseCookies
-	UseCookies bool
-
 	// CookieName
 	CookieName string
 
