@@ -47,13 +47,27 @@ type GinJWTMiddleware struct {
 	// The attributes mentioned on jwt.io can't be used as keys for the map.
 	// Optional, by default no additional data will be set.
 	PayloadFunc func(data interface{}) MapClaims
+
+	// UseCookies
+	UseCookies bool
+
+	// CookieName
+	CookieName string
+
+	// TokenLookup is a string in the form of "<source>:<name>" that is used
+	// to extract token from the request.
+	// Optional. Default value "header:Authorization".
+	// Possible values:
+	// - "header:<name>"
+	// - "cookie:<name>"
+	TokenLookup string
 }
 
 // Some constants used across GinSec.
 const (
 	SigningAlgorithm = "HS256"
-	TokenHeadName = "Bearer"
-	AuthHeaderName = "Authorization"
+	TokenHeadName    = "Bearer"
+	AuthHeaderName   = "Authorization"
 )
 
 // Errors
@@ -62,6 +76,7 @@ var (
 	ErrIdentityHandlerEmpty = errors.New("idenity handler cannot be empty")
 	ErrIdentityKeyEmpty     = errors.New("identity key cannot be empty")
 	ErrEmptyAuthHeader      = errors.New("authentication header cannot be empty")
+	ErrEmptyCookieToken     = errors.New("cookie cannot be empty")
 	ErrInvalidAuthHeader    = errors.New("invalid authentication header")
 	ErrMissingExpField      = errors.New("missing exp field")
 	ErrWrongFormatOfExp     = errors.New("wrong exp field format")
@@ -79,6 +94,10 @@ func New(mw *GinJWTMiddleware) (*GinJWTMiddleware, error) {
 func (mw *GinJWTMiddleware) MiddlewareInit() error {
 	if mw.Key == nil {
 		return ErrKeyEmpty
+	}
+
+	if mw.TokenLookup == "" {
+		mw.TokenLookup = "header:Authorization"
 	}
 
 	if mw.Realm == "" {
@@ -110,6 +129,10 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 				"message": message,
 			})
 		}
+	}
+
+	if mw.CookieName == "" {
+		mw.CookieName = "jwt"
 	}
 
 	if mw.IdentityHandler == nil {
@@ -181,7 +204,21 @@ func (mw *GinJWTMiddleware) ParseToken(c *gin.Context) (*jwt.Token, error) {
 	var token string
 	var err error
 
-	token, err = mw.jwtFromHeader(c, AuthHeaderName)
+	methods := strings.Split(mw.TokenLookup, ",")
+	for _, method := range methods {
+		if len(token) > 0 {
+			break
+		}
+		parts := strings.Split(strings.TrimSpace(method), ":")
+		k := strings.TrimSpace(parts[0])
+		v := strings.TrimSpace(parts[1])
+		switch k {
+		case "header":
+			token, err = mw.jwtFromHeader(c, v)
+		case "cookie":
+			token, err = mw.jwtFromCookie(c, v)
+		}
+	}
 
 	if err != nil {
 		return nil, err
@@ -208,6 +245,16 @@ func (mw *GinJWTMiddleware) jwtFromHeader(c *gin.Context, key string) (string, e
 	}
 
 	return parts[1], nil
+}
+
+func (mw *GinJWTMiddleware) jwtFromCookie(c *gin.Context, key string) (string, error) {
+	cookie, _ := c.Cookie(key)
+
+	if cookie == "" {
+		return "", ErrEmptyCookieToken
+	}
+
+	return cookie, nil
 }
 
 func (mw *GinJWTMiddleware) TokenGenerator(data interface{}) (string, time.Time, error) {
