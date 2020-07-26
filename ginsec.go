@@ -79,6 +79,7 @@ var (
 	ErrWrongFormatOfExp     = errors.New("wrong exp field format")
 	ErrExpiredToken         = errors.New("token expired")
 	ErrForbidden            = errors.New("you don't have permission to access this resource")
+	ErrClaimsIncorrect      = errors.New("you're claims are incorrect")
 )
 
 func New(mw *GinJWTMiddleware) (*GinJWTMiddleware, error) {
@@ -175,7 +176,7 @@ func (mw *GinJWTMiddleware) middlewareImpl(c *gin.Context) {
 	}
 
 	if !mw.Authorizator(identity, c) {
-		mw.unauthorized(c, http.StatusForbidden, ErrForbidden.Error())
+		mw.unauthorized(c, http.StatusUnauthorized, ErrClaimsIncorrect.Error())
 		return
 	}
 
