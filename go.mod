@@ -1,4 +1,4 @@
-module github.com/asks8m/ginsec
+module github.com/synt8x/ginsec
 
 go 1.14
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/asks8m/ginsec"
 	"github.com/gin-gonic/gin"
+	"github.com/synt8x/ginsec"
 	"log"
 	"time"
 )
