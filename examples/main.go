@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/nilpntr/ginsec"
+	"github.com/ss3mm/ginsec"
 	"log"
 	"time"
 )

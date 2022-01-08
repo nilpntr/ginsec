@@ -2,17 +2,17 @@ package ginsec
 
 import (
 	"errors"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"strings"
 	"time"
 )
 
-// Default user claims
+// MapClaims Default user claims
 type MapClaims map[string]interface{}
 
-// The Gin-JWT-Go middleware
+// GinJWTMiddleware The Gin-JWT-Go middleware
 type GinJWTMiddleware struct {
 	// Realm name of the realm. Required.
 	Realm string
@@ -64,7 +64,6 @@ type GinJWTMiddleware struct {
 const (
 	SigningAlgorithm = "HS256"
 	TokenHeadName    = "Bearer"
-	AuthHeaderName   = "Authorization"
 )
 
 // Errors
@@ -78,7 +77,6 @@ var (
 	ErrMissingExpField      = errors.New("missing exp field")
 	ErrWrongFormatOfExp     = errors.New("wrong exp field format")
 	ErrExpiredToken         = errors.New("token expired")
-	ErrForbidden            = errors.New("you don't have permission to access this resource")
 	ErrClaimsIncorrect      = errors.New("you're claims are incorrect")
 )
 
